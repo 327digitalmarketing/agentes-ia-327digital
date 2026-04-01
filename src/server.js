@@ -26,6 +26,9 @@ app.get('/chat-styles.css', (req, res) => {
   res.sendFile(path.join(publicPath, 'chat-styles.css'));
 });
 
+// Proxy Anthropic (chat demo)
+app.use(require('./routes/chat'));
+
 // Routes
 app.use('/api/agent', require('./routes/agent'));
 app.use('/api/client', require('./routes/client'));
