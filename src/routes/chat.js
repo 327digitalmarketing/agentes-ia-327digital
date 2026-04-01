@@ -21,7 +21,7 @@ router.post('/api/chat', async (req, res) => {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model:      'claude-sonnet-4-20250514',
+        model:      'claude-sonnet-4-5',
         max_tokens: 400,
         system,
         messages
@@ -29,6 +29,9 @@ router.post('/api/chat', async (req, res) => {
     });
 
     const data = await response.json();
+    if (!response.ok) {
+      console.error('Anthropic error:', JSON.stringify(data));
+    }
     res.json(data);
 
   } catch (err) {
