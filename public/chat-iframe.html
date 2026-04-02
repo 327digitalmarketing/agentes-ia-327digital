@@ -126,7 +126,7 @@
   .meet-section { position:relative; z-index:1; animation:fadeUp .6s .35s ease both; }
   .meet-title { font-size:.78rem; font-weight:600; color:rgba(255,255,255,.6); letter-spacing:.08em; text-transform:uppercase; margin-bottom:.9rem; }
 
-  .lang-grid { display:flex; flex-wrap:wrap; gap:.4rem; margin-bottom:.9rem; }
+  .lang-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:.4rem; margin-bottom:.9rem; }
   .lang-btn {
     background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.1);
     border-radius:100px; color:rgba(255,255,255,.65);
@@ -356,7 +356,31 @@
   .confirmed-title { font-family:var(--font-display); font-size:1.35rem; font-weight:600; color:var(--deep); margin-bottom:.4rem; }
   .confirmed-sub { color:var(--muted); font-size:.86rem; line-height:1.6; }
 
-  @media (max-width:860px) { #app { grid-template-columns:1fr; } .left { display:none; } }
+  .lang-grid-mobile {
+    display: none;
+    flex-wrap: wrap;
+    gap: .4rem;
+    padding: .75rem 1.25rem;
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+  }
+  .lang-grid-mobile .lang-btn {
+    background: var(--mint);
+    border: 1px solid rgba(26,122,138,.2);
+    color: var(--teal);
+    font-size: .75rem;
+    padding: .3rem .75rem;
+  }
+  .lang-grid-mobile .lang-btn.active {
+    background: var(--teal);
+    color: var(--white);
+    border-color: var(--teal);
+  }
+  @media (max-width:860px) {
+    #app { grid-template-columns:1fr; }
+    .left { display:none; }
+    .lang-grid-mobile { display:flex; }
+  }
 </style>
 </head>
 <body>
@@ -479,6 +503,16 @@
       </div>
 
       <div class="lang-notice">🌐 Aria responde automáticamente en tu idioma</div>
+
+      <!-- Selector de idioma visible solo en móvil -->
+      <div class="lang-grid-mobile">
+        <button class="lang-btn" onclick="setLang(this)">🌐 Auto</button>
+        <button class="lang-btn active" onclick="setLang(this)">🇪🇸 Español</button>
+        <button class="lang-btn" onclick="setLang(this)">🇺🇸 English</button>
+        <button class="lang-btn" onclick="setLang(this)">🇧🇷 Português</button>
+        <button class="lang-btn" onclick="setLang(this)">🇫🇷 Français</button>
+        <button class="lang-btn" onclick="setLang(this)">🇸🇦 العربية</button>
+      </div>
 
     </div>
 
