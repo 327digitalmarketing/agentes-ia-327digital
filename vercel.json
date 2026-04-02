@@ -2,34 +2,18 @@
   "version": 2,
   "builds": [
     {
-      "src": "src/server.js",
+      "src": "api/chat.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
-      "src": "/chat-widget.js",
-      "dest": "src/server.js"
-    },
-    {
-      "src": "/chat-iframe.html",
-      "dest": "src/server.js"
-    },
-    {
-      "src": "/chat-styles.css",
-      "dest": "src/server.js"
-    },
-    {
-      "src": "/api/(.*)",
-      "dest": "src/server.js"
-    },
-    {
-      "src": "/health",
-      "dest": "src/server.js"
+      "src": "/api/chat",
+      "dest": "api/chat.js"
     },
     {
       "src": "/(.*)",
-      "dest": "src/server.js"
+      "dest": "/public/$1"
     }
   ]
 }
