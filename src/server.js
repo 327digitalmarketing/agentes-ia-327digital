@@ -29,6 +29,9 @@ app.get('/chat-styles.css', (req, res) => {
 // Proxy Anthropic (chat demo)
 app.use(require('./routes/chat'));
 
+// Proxy ElevenLabs TTS
+app.use(require('./routes/tts'));
+
 // Routes
 app.use('/api/agent', require('./routes/agent'));
 app.use('/api/client', require('./routes/client'));

@@ -7,12 +7,8 @@
 // Otros idiomas    → Multilingual Charlotte
 
 const VOICES = {
-  es: '21m00Tcm4TlvDq8ikWAM',   // Charlotte — Español España
-  la: 'XB0fDUnXU5powFXDhCwa',   // Charlotte multilingual — Latam neutro
-  en: '21m00Tcm4TlvDq8ikWAM',
-  pt: '21m00Tcm4TlvDq8ikWAM',
-  fr: '21m00Tcm4TlvDq8ikWAM',
-  ar: '21m00Tcm4TlvDq8ikWAM',
+  es:      'pNInz6obpgDQGcFmaJgB',
+  default: 'pNInz6obpgDQGcFmaJgB',
 };
 
 module.exports = async function handler(req, res) {
@@ -26,7 +22,7 @@ module.exports = async function handler(req, res) {
   const { text, lang } = req.body;
   if (!text) return res.status(400).json({ error: 'text requerido' });
 
-  const voiceId = VOICES[lang] || VOICES['es'];
+  const voiceId = VOICES[lang] || VOICES.default;
 
   try {
     const response = await fetch(
