@@ -853,33 +853,59 @@ function addUserBubble(text) {
 
 function addAriaBubble(html, rawText) {
   const msgId = 'msg-' + Date.now();
-  const listenLabel = T[currentLang].listenBtn;
-  const row = make(
-    '<div class="msg-row">' +
-      '<div class="msg-avatar aria">🦷</div>' +
-      '<div class="bubble aria" id="bubble-' + msgId + '">' +
-        '<div>' + html + '</div>' +
-        '<div style="margin-top:.5rem;display:flex;align-items:center;gap:.4rem;">' +
-          '<button id="btn-' + msgId + '" style="' +
-            'background:none;border:1px solid rgba(26,122,138,.25);border-radius:100px;' +
-            'color:var(--teal);font-size:.7rem;padding:.2rem .6rem;cursor:pointer;' +
-            'display:inline-flex;align-items:center;gap:.3rem;transition:all .2s;">' +
-            listenLabel +
-          '</button>' +
-          '<audio id="audio-' + msgId + '" style="display:none;"></audio>' +
-        '</div>' +
-        '<span class="bubble-time">' + ts() + '</span>' +
-      '</div>' +
-    '</div>'
-  );
-  const btn = row.querySelector('#btn-' + msgId);
+
+  // Row
+  const row = document.createElement('div');
+  row.className = 'msg-row';
+
+  // Avatar
+  const avatar = document.createElement('div');
+  avatar.className = 'msg-avatar aria';
+  avatar.textContent = '🦷';
+
+  // Bubble
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble aria';
+
+  // Message content — único lugar donde usamos innerHTML (contenido del mensaje)
+  const content = document.createElement('div');
+  content.innerHTML = html;
+  bubble.appendChild(content);
+
+  // Voice bar
+  const voiceBar = document.createElement('div');
+  voiceBar.style.cssText = 'margin-top:.5rem;display:flex;align-items:center;gap:.4rem;';
+
+  const btn = document.createElement('button');
+  btn.id = 'btn-' + msgId;
+  btn.textContent = T[currentLang].listenBtn;
+  btn.style.cssText = 'background:none;border:1px solid rgba(26,122,138,.25);border-radius:100px;' +
+    'color:var(--teal);font-size:.7rem;padding:.2rem .6rem;cursor:pointer;' +
+    'display:inline-flex;align-items:center;gap:.3rem;transition:all .2s;font-family:inherit;';
   btn.dataset.text = rawText || html.replace(/<[^>]*>/g, '');
   btn.addEventListener('click', function() { speakText(msgId); });
+
+  const audioEl = document.createElement('audio');
+  audioEl.id = 'audio-' + msgId;
+  audioEl.style.display = 'none';
+
+  voiceBar.appendChild(btn);
+  voiceBar.appendChild(audioEl);
+  bubble.appendChild(voiceBar);
+
+  // Timestamp
+  const timeEl = document.createElement('span');
+  timeEl.className = 'bubble-time';
+  timeEl.textContent = ts();
+  bubble.appendChild(timeEl);
+
+  row.appendChild(avatar);
+  row.appendChild(bubble);
   document.getElementById('messages').appendChild(row);
   scrollDown();
 
-  // Auto-reproducir voz al aparecer la respuesta
-  if (rawText) setTimeout(() => speakText(msgId), 300);
+  // Auto-reproducir voz
+  if (rawText) setTimeout(function() { speakText(msgId); }, 300);
 }
 
 let currentAudio = null;
