@@ -7,8 +7,8 @@
 // Otros idiomas    → Multilingual Charlotte
 
 const VOICES = {
-  es:      'pNInz6obpgDQGcFmaJgB',
-  default: 'pNInz6obpgDQGcFmaJgB',
+  es: 'XB0fDUnXU5powFXDhCwa', // Charlotte — cálida, natural, excelente en español neutro
+  en: '21m00Tcm4TlvDq8ikWAM', // Rachel   — inglés americano claro y profesional
 };
 
 module.exports = async function handler(req, res) {
@@ -22,7 +22,7 @@ module.exports = async function handler(req, res) {
   const { text, lang } = req.body;
   if (!text) return res.status(400).json({ error: 'text requerido' });
 
-  const voiceId = VOICES[lang] || VOICES.default;
+  const voiceId = VOICES[lang] || VOICES.es;
 
   try {
     const response = await fetch(

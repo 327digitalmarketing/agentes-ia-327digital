@@ -1,27 +1,23 @@
 // routes/tts.js
-// Proxy seguro para ElevenLabs TTS
-// La API key nunca llega al cliente
+// Proxy ElevenLabs TTS con voces distintas para ES y EN
 
 const express = require('express');
 const router  = express.Router();
 
-// Voces seleccionadas para español natural
-// eleven_multilingual_v2 maneja ambas variantes sin configuración extra
 const VOICES = {
-  es:      'pNInz6obpgDQGcFmaJgB', // español neutro (Latinoamérica)
-  default: 'pNInz6obpgDQGcFmaJgB', // fallback
+  es: 'XB0fDUnXU5powFXDhCwa', // Charlotte — cálida, natural, excelente en español neutro
+  en: '21m00Tcm4TlvDq8ikWAM', // Rachel   — inglés americano claro y profesional
 };
 
 router.post('/api/tts', async (req, res) => {
   const { text, lang } = req.body;
 
   if (!text || text.trim().length === 0) {
-    return res.status(400).json({ error: 'Texto requerido' });
+    return res.status(400).json({ error: 'Text required' });
   }
 
-  // Limitar longitud para evitar costes excesivos
   const cleanText = text.trim().slice(0, 800);
-  const voiceId   = VOICES[lang] || VOICES.default;
+  const voiceId   = VOICES[lang] || VOICES.es;
 
   try {
     const response = await fetch(
@@ -29,16 +25,16 @@ router.post('/api/tts', async (req, res) => {
       {
         method: 'POST',
         headers: {
-          'Content-Type':  'application/json',
-          'xi-api-key':    process.env.ELEVENLABS_API_KEY,
+          'Content-Type': 'application/json',
+          'xi-api-key':   process.env.ELEVENLABS_API_KEY,
         },
         body: JSON.stringify({
           text: cleanText,
-          model_id: 'eleven_multilingual_v2',   // soporta ES España + Latinoamérica
+          model_id: 'eleven_multilingual_v2',
           voice_settings: {
-            stability:         0.45,  // más natural, menos robótico
+            stability:         0.45,
             similarity_boost:  0.80,
-            style:             0.30,  // algo de expresividad
+            style:             0.30,
             use_speaker_boost: true,
           },
         }),
@@ -47,19 +43,17 @@ router.post('/api/tts', async (req, res) => {
 
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
-      return res.status(response.status).json({ error: err.detail || 'Error ElevenLabs' });
+      return res.status(response.status).json({ error: err.detail || 'ElevenLabs error' });
     }
 
-    // Devolver el audio directamente como stream
     res.setHeader('Content-Type', 'audio/mpeg');
     res.setHeader('Cache-Control', 'no-cache');
-
     const buffer = await response.arrayBuffer();
     res.send(Buffer.from(buffer));
 
   } catch (err) {
-    console.error('Error TTS proxy:', err);
-    res.status(500).json({ error: 'Error conectando con ElevenLabs' });
+    console.error('TTS proxy error:', err);
+    res.status(500).json({ error: 'Error connecting to ElevenLabs' });
   }
 });
 
