@@ -137,6 +137,42 @@
   .bubble.user { background:linear-gradient(135deg, var(--teal) 0%, var(--teal-lt) 100%); color:var(--white); border-radius:18px 18px 4px 18px; }
   .bubble-time { display:block; font-size:.63rem; margin-top:.3rem; opacity:.5; }
 
+  /* ── VOICE TOGGLE BUTTON ─────────────────────────────── */
+  .voice-toggle-btn {
+    position:relative; width:38px; height:38px;
+    background:var(--mint); border:1px solid rgba(26,122,138,.25);
+    border-radius:50%; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    font-size:1rem; transition:all .2s; flex-shrink:0;
+    color:var(--teal);
+  }
+  .voice-toggle-btn:hover { background:rgba(26,122,138,.15); }
+  .voice-toggle-btn.muted { background:rgba(200,50,50,.1); border-color:rgba(200,50,50,.3); color:#c83232; }
+  .speaking-ring {
+    position:absolute; inset:-4px; border-radius:50%;
+    border:2px solid var(--teal); opacity:0;
+    pointer-events:none;
+  }
+  .voice-toggle-btn.speaking .speaking-ring {
+    animation:speakPulse 1.2s ease-in-out infinite;
+  }
+  @keyframes speakPulse {
+    0%   { opacity:.7; transform:scale(1); }
+    100% { opacity:0;  transform:scale(1.55); }
+  }
+
+  /* ── TOAST ───────────────────────────────────────────── */
+  .toast {
+    position:fixed; bottom:1.5rem; left:50%; transform:translateX(-50%);
+    background:var(--deep); color:var(--white);
+    border-radius:100px; padding:.45rem 1.1rem;
+    font-size:.78rem; font-weight:500; z-index:999;
+    box-shadow:0 4px 20px rgba(13,43,62,.35);
+    animation:toastIn .25s ease;
+    pointer-events:none;
+  }
+  @keyframes toastIn { from { opacity:0; transform:translateX(-50%) translateY(10px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
+
   .bubble p      { margin-bottom:.55rem; }
   .bubble p:last-child { margin-bottom:0; }
   .bubble ul, .bubble ol { padding-left:1.2rem; margin:.4rem 0; }
@@ -256,6 +292,9 @@
       </div>
       <div class="header-actions">
         <button id="lang-toggle" onclick="toggleLang()" style="background:var(--mint);border:1px solid rgba(26,122,138,.25);border-radius:100px;color:var(--teal);font-family:var(--font-body);font-size:.72rem;font-weight:600;padding:.3rem .75rem;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:.3rem;">🇪🇸 ES</button>
+        <button id="voice-toggle" class="voice-toggle-btn" onclick="toggleVoice()" title="Activar/desactivar voz">
+          🔊<div class="speaking-ring"></div>
+        </button>
         <button class="action-btn" title="Llamar" onclick="window.open('tel:+34963825577')">📞</button>
         <button class="action-btn" title="WhatsApp" onclick="window.open('https://wa.me/34681376212')">💬</button>
       </div>
@@ -450,6 +489,8 @@ var userName = '';
 var conversationHistory = [];
 var currentAudio = null;
 var typingEl = null;
+var voiceEnabled = true;
+var isSpeaking = false;
 
 /* ── UTILS ───────────────────────────────────────────── */
 function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -631,29 +672,79 @@ function addAriaBubble(html, rawText) {
   document.getElementById('messages').appendChild(row);
   scrollDown();
 
-  // Auto-play voice
+  // Auto-play voice (respects voiceEnabled + isSpeaking guard)
   if (rawText) {
     setTimeout(function(){ speakText(msgId); }, 300);
   }
+
+}
+
+/* ── VOICE TOGGLE (Ivy-style) ────────────────────────── */
+function toggleVoice() {
+  voiceEnabled = !voiceEnabled;
+  var btn = document.getElementById('voice-toggle');
+  if (!voiceEnabled) {
+    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+    isSpeaking = false;
+    setVoiceSpeaking(false);
+    btn.classList.add('muted');
+    btn.innerHTML = '🔇<div class="speaking-ring"></div>';
+    showToast(currentLang === 'en' ? 'Voice muted 🔇' : 'Voz desactivada 🔇');
+  } else {
+    btn.classList.remove('muted');
+    btn.innerHTML = '🔊<div class="speaking-ring"></div>';
+    showToast(currentLang === 'en' ? 'Voice on 🔊' : 'Voz activada 🔊');
+  }
+}
+
+function setVoiceSpeaking(on) {
+  var btn = document.getElementById('voice-toggle');
+  if (!btn) return;
+  if (on) { btn.classList.add('speaking'); }
+  else     { btn.classList.remove('speaking'); }
+}
+
+function showToast(msg) {
+  var existing = document.querySelector('.toast');
+  if (existing) existing.remove();
+  var t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(function(){ t.remove(); }, 2200);
 }
 
 /* ── TTS ─────────────────────────────────────────────── */
+function cleanForTTS(text) {
+  return text
+    .replace(/[\*\_\`\#\~]/g, '')
+    .replace(/<[^>]*>/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .substring(0, 500);
+}
+
 function speakText(msgId) {
-  var btn   = document.getElementById('btn-' + msgId);
-  var audio = document.getElementById('audio-' + msgId);
-  if (!btn || !audio) return;
+  var btn = document.getElementById('btn-' + msgId);
+  if (!btn) return;
 
-  var text = btn.dataset.text.slice(0, 800);
-
+  // If already speaking this message, stop it
   if (currentAudio && !currentAudio.paused) {
     currentAudio.pause();
-    currentAudio.currentTime = 0;
-    if (currentAudio === audio) {
-      btn.textContent = T[currentLang].listenBtn;
-      return;
-    }
+    currentAudio = null;
+    isSpeaking = false;
+    setVoiceSpeaking(false);
+    btn.textContent = T[currentLang].listenBtn;
+    return;
   }
 
+  if (!voiceEnabled || isSpeaking) return;
+
+  var text = cleanForTTS(btn.dataset.text);
+  if (!text) return;
+
+  isSpeaking = true;
+  setVoiceSpeaking(true);
   btn.textContent = T[currentLang].loadingBtn;
   btn.disabled = true;
 
@@ -667,14 +758,29 @@ function speakText(msgId) {
     return res.blob();
   })
   .then(function(blob){
-    audio.src = URL.createObjectURL(blob);
-    audio.play();
-    currentAudio = audio;
+    var url = URL.createObjectURL(blob);
+    if (currentAudio) { currentAudio.pause(); }
+    currentAudio = new Audio(url);
+    currentAudio.onended = function(){
+      isSpeaking = false;
+      setVoiceSpeaking(false);
+      btn.textContent = T[currentLang].listenBtn;
+      btn.disabled = false;
+      URL.revokeObjectURL(url);
+    };
+    currentAudio.onerror = function(){
+      isSpeaking = false;
+      setVoiceSpeaking(false);
+      btn.textContent = T[currentLang].listenBtn;
+      btn.disabled = false;
+    };
+    currentAudio.play();
     btn.textContent = T[currentLang].listenBtn;
     btn.disabled = false;
-    audio.onended = function(){ btn.textContent = T[currentLang].listenBtn; };
   })
   .catch(function(){
+    isSpeaking = false;
+    setVoiceSpeaking(false);
     btn.textContent = T[currentLang].listenBtn;
     btn.disabled = false;
   });
