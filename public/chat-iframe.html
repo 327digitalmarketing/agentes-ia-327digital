@@ -686,6 +686,11 @@ const T = {
     modalPhone:   'Teléfono',
     modalEmail:   'Correo electrónico (para confirmación)',
     btnConfirm:   '✓ Confirmar mi Cita',
+    listenBtn:    '🔊 Escuchar',
+    loadingBtn:   '⏳ Cargando…',
+    openApptBtn:  '📅 Abrir formulario de cita',
+    errNoReply:   '❌ No obtuve respuesta. Inténtalo de nuevo.',
+    errConn:      '❌ No pude conectar con el servidor. Inténtalo de nuevo.',
     welcomeMsg:   '¡Hola! Soy <strong>Aria</strong>, tu asistente de la Clínica Dental Asensio 😊<br><br>Puedo ayudarte con <strong>citas, tratamientos, precios y urgencias</strong>. Recuerda que la <strong>primera visita es gratuita</strong> e incluye revisión completa, scanner 3D y radiografía digital.<br><br>¿En qué puedo ayudarte hoy?',
   },
   en: {
@@ -726,6 +731,11 @@ const T = {
     modalPhone:   'Phone',
     modalEmail:   'Email (for confirmation)',
     btnConfirm:   '✓ Confirm my Appointment',
+    listenBtn:    '🔊 Listen',
+    loadingBtn:   '⏳ Loading…',
+    openApptBtn:  '📅 Open appointment form',
+    errNoReply:   '❌ No response received. Please try again.',
+    errConn:      '❌ Could not connect to the server. Please try again.',
     welcomeMsg:   'Hi! I\'m <strong>Aria</strong>, your assistant at Clínica Dental Asensio 😊<br><br>I can help you with <strong>appointments, treatments, prices and emergencies</strong>. Remember that the <strong>first visit is free</strong> and includes a full check-up, 3D scanner and digital X-ray.<br><br>How can I help you today?',
   }
 };
@@ -849,11 +859,11 @@ function addAriaBubble(html, rawText) {
       <div class="bubble aria">
         ${html}
         <div style="margin-top:.5rem;display:flex;align-items:center;gap:.4rem;">
-          <button id="btn-${msgId}" onclick="speakText('${msgId}')" title="Escuchar" style="
+          <button id="btn-${msgId}" onclick="speakText('${msgId}')" title="${T[currentLang].listenBtn}" style="
             background:none;border:1px solid rgba(26,122,138,.25);border-radius:100px;
             color:var(--teal);font-size:.7rem;padding:.2rem .6rem;cursor:pointer;
             display:inline-flex;align-items:center;gap:.3rem;transition:all .2s;">
-            🔊 Escuchar
+            ${T[currentLang].listenBtn}
           </button>
           <audio id="audio-${msgId}" style="display:none;"></audio>
         </div>
@@ -880,12 +890,12 @@ async function speakText(msgId) {
   if (currentAudio && !currentAudio.paused) {
     currentAudio.pause();
     currentAudio.currentTime = 0;
-    if (currentAudio === audio) { btn.textContent = '🔊 Escuchar'; return; }
+    if (currentAudio === audio) { btn.textContent = T[currentLang].listenBtn; return; }
   }
 
   const lang = currentLang || 'es';
 
-  btn.textContent = '⏳ Cargando…';
+  btn.textContent = T[currentLang].loadingBtn;
   btn.disabled = true;
 
   try {
@@ -901,11 +911,11 @@ async function speakText(msgId) {
     audio.src  = URL.createObjectURL(blob);
     audio.play();
     currentAudio = audio;
-    btn.textContent = '🔊 Escuchar';
+    btn.textContent = T[currentLang].listenBtn;
     btn.disabled = false;
-    audio.onended = () => { btn.textContent = '🔊 Escuchar'; };
+    audio.onended = () => { btn.textContent = T[currentLang].listenBtn; };
   } catch (e) {
-    btn.textContent = '🔊 Escuchar';
+    btn.textContent = T[currentLang].listenBtn;
     btn.disabled = false;
   }
 }
@@ -949,7 +959,7 @@ async function callProxy(userMessage) {
 
     const reply = data.content?.[0]?.text || '';
     if (!reply) {
-      addAriaBubble('❌ No obtuve respuesta. Inténtalo de nuevo.');
+      addAriaBubble(T[currentLang].errNoReply);
       return;
     }
     conversationHistory.push({ role: 'assistant', content: reply });
@@ -966,7 +976,7 @@ async function callProxy(userMessage) {
              box-shadow:0 3px 12px rgba(26,122,138,.35);
              display:inline-flex; align-items:center; gap:.4rem;
              transition:transform .15s;">
-             📅 Abrir formulario de cita
+             ${T[currentLang].openApptBtn}
            </button>
          </div>`;
       addAriaBubble(html, clean);
@@ -976,7 +986,7 @@ async function callProxy(userMessage) {
   } catch (err) {
     hideTyping();
     console.error('callProxy error:', err);
-    addAriaBubble('❌ No pude conectar con el servidor. Inténtalo de nuevo.');
+    addAriaBubble(T[currentLang].errConn);
   }
 }
 
