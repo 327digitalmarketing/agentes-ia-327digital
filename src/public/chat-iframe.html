@@ -887,6 +887,23 @@ function selectOpt(el, group) {
   el.classList.add('active');
 }
 
+/* ── ZAPIER WEBHOOK ──────────────────────────────────── */
+var ZAPIER_WEBHOOK = 'https://hooks.zapier.com/hooks/catch/27199841/u7cn7qe/';
+
+function sendToZapier(payload) {
+  fetch(ZAPIER_WEBHOOK, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(function(res){
+    console.log('Zapier OK:', res.status);
+  })
+  .catch(function(err){
+    console.error('Zapier error:', err);
+  });
+}
+
 function confirmAppt() {
   var service = document.querySelector('.service-opt.active');
   var time    = document.querySelector('.time-slot.active');
@@ -903,11 +920,29 @@ function confirmAppt() {
     alert(currentLang === 'en' ? 'Please enter your name and phone number.' : 'Por favor introduce tu nombre y teléfono.');
     return;
   }
+  if (!email) {
+    alert(currentLang === 'en' ? 'Please enter your email to receive the confirmation.' : 'Por favor introduce tu correo electrónico para recibir la confirmación.');
+    return;
+  }
 
-  var emailLine = email ? (currentLang === 'en' ? ' and we will send confirmation to <strong>' + email + '</strong>' : ' y enviaremos confirmación a <strong>' + email + '</strong>') : '';
   var svcName = service.textContent.trim();
   var dateStr = fmtDate(date);
   var timeStr = time.textContent;
+
+  // ── Enviar datos a Zapier al confirmar la cita ────────
+  sendToZapier({
+    nombre:     name,
+    telefono:   phone,
+    email:      email,
+    servicio:   svcName,
+    fecha:      date,
+    fecha_texto: dateStr,
+    hora:       timeStr,
+    ciudad:     userCity || 'No detectada',
+    idioma:     currentLang === 'en' ? 'Inglés' : 'Español',
+    fuente:     'Demo Aria — 327 Digital Marketing',
+    timestamp:  new Date().toISOString()
+  });
 
   document.getElementById('modal-body').innerHTML =
     '<div class="confirmed-msg">' +
@@ -915,15 +950,15 @@ function confirmAppt() {
       '<div class="confirmed-title">' + (currentLang === 'en' ? 'Appointment Confirmed!' : '¡Cita Confirmada!') + '</div>' +
       '<p class="confirmed-sub">' +
         (currentLang === 'en'
-          ? 'Hi <strong>' + name + '</strong>, your <strong>' + svcName + '</strong> appointment<br>is booked for <strong>' + dateStr + '</strong> at <strong>' + timeStr + '</strong>.<br><br>We will call you at <strong>' + phone + '</strong>' + emailLine + '.<br><br>See you soon! 😊'
-          : 'Hola <strong>' + name + '</strong>, tu cita de <strong>' + svcName + '</strong><br>está reservada para el <strong>' + dateStr + '</strong> a las <strong>' + timeStr + '</strong>.<br><br>Te llamaremos al <strong>' + phone + '</strong>' + emailLine + '.<br><br>¡Hasta pronto! 😊'
+          ? 'Hi <strong>' + name + '</strong>, your <strong>' + svcName + '</strong> appointment<br>is booked for <strong>' + dateStr + '</strong> at <strong>' + timeStr + '</strong>.<br><br>We will call you at <strong>' + phone + '</strong> and send a confirmation to <strong>' + email + '</strong>.<br><br>See you soon! 😊'
+          : 'Hola <strong>' + name + '</strong>, tu cita de <strong>' + svcName + '</strong><br>está reservada para el <strong>' + dateStr + '</strong> a las <strong>' + timeStr + '</strong>.<br><br>Te llamaremos al <strong>' + phone + '</strong> y recibirás confirmación en <strong>' + email + '</strong>.<br><br>¡Hasta pronto! 😊'
         ) +
       '</p>' +
     '</div>';
 
   var confirmMsg = currentLang === 'en'
-    ? '<p>✅ Perfect, <strong>' + name + '</strong>! Your appointment is confirmed.</p><p><strong>' + svcName + '</strong> · ' + dateStr + ' at <strong>' + timeStr + '</strong>.</p><p>We will contact you at <strong>' + phone + '</strong>. If you need to change it, call us at <strong>96 382 55 77</strong>. 😊</p>'
-    : '<p>✅ ¡Perfecto, <strong>' + name + '</strong>! Tu cita ha quedado registrada.</p><p><strong>' + svcName + '</strong> · ' + dateStr + ' a las <strong>' + timeStr + '</strong>.</p><p>Te contactaremos en el <strong>' + phone + '</strong>. Si necesitas cambiarla llámanos al <strong>96 382 55 77</strong>. 😊</p>';
+    ? '<p>✅ Perfect, <strong>' + name + '</strong>! Your appointment is confirmed.</p><p><strong>' + svcName + '</strong> · ' + dateStr + ' at <strong>' + timeStr + '</strong>.</p><p>Check <strong>' + email + '</strong> for your confirmation email. 😊</p>'
+    : '<p>✅ ¡Perfecto, <strong>' + name + '</strong>! Tu cita ha quedado registrada.</p><p><strong>' + svcName + '</strong> · ' + dateStr + ' a las <strong>' + timeStr + '</strong>.</p><p>Revisa <strong>' + email + '</strong> para el correo de confirmación. 😊</p>';
 
   addAriaBubble(confirmMsg);
   setTimeout(closeModal, 4500);
