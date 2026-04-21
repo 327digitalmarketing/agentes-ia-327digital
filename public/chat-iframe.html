@@ -887,20 +887,20 @@ function selectOpt(el, group) {
   el.classList.add('active');
 }
 
-/* ── ZAPIER WEBHOOK ──────────────────────────────────── */
-var ZAPIER_WEBHOOK = 'https://hooks.zapier.com/hooks/catch/27199841/u7cn7qe/';
+/* ── MAKE WEBHOOK ──────────────────────────────────── */
+var MAKE_WEBHOOK = 'https://hook.eu1.make.com/uqo5c69cwoc5xpdsd2dkmjld8qe6mnap';
 
 function sendToZapier(payload) {
-  fetch(ZAPIER_WEBHOOK, {
+  fetch(MAKE_WEBHOOK, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
   })
   .then(function(res){
-    console.log('Zapier OK:', res.status);
+    console.log('Make webhook OK:', res.status);
   })
   .catch(function(err){
-    console.error('Zapier error:', err);
+    console.error('Make webhook error:', err);
   });
 }
 
