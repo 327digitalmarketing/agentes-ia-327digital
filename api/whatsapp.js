@@ -62,16 +62,16 @@ module.exports = async function handler(req, res) {
   const msgBody = body.Body || body.body || '';
   const msgFrom = body.From || body.from || '';
 
-  // Respond to Twilio immediately with empty TwiML
+  if (msgBody && msgFrom) {
+    try {
+      const reply = await callGemini(msgBody);
+      await sendWhatsApp(msgFrom, TWILIO_FROM, reply);
+    } catch (err) {
+      console.error('Nova error:', err);
+    }
+  }
+
+  // Respond to Twilio with empty TwiML (must be last)
   res.setHeader('Content-Type', 'text/xml');
   res.status(200).send('<Response></Response>');
-
-  if (!msgBody || !msgFrom) return;
-
-  try {
-    const reply = await callGemini(msgBody);
-    await sendWhatsApp(msgFrom, TWILIO_FROM, reply);
-  } catch (err) {
-    console.error('Nova error:', err);
-  }
 };
